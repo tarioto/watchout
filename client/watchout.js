@@ -28,9 +28,9 @@ svg.append('rect').attr('width', width)
   .attr('height', height).attr('stroke', 'blue')
   .attr('stroke-width', '5px');
 
-var nodes = d3.range(11).map(function() {
+var nodes = d3.range(20).map(function() {
   return {
-    radius: Math.random() * 10 + 5,
+    radius: Math.random() * 10 + 8,
     x: Math.floor(Math.random() * width * .75) + .125 * width,
     y: Math.floor(Math.random() * height * .75) + .125 * height,
     velocity: Math.random() + 0.5,
@@ -109,23 +109,21 @@ var collisionDetector = function(player) {
 
   return function(quad, x1, y1, x2, y2) {
     if (quad.point && (quad.point !== player)) {
-      quad.point.x += Math.cos(quad.point.direction) * quad.point.velocity;
-      quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
+      var newX = quad.point.x + Math.cos(quad.point.direction) * quad.point.velocity;
+      var newY = quad.point.y + Math.sin(quad.point.direction) * quad.point.velocity;
       // check for collisons
-      if ((quad.point.x - quad.point.radius) < 0 || (quad.point.x + quad.point.radius) > width) {
-        
-        // undo the last change
-        quad.point.x = quad.point.px;
-        // figure out a new direction
+      if ((newX - quad.point.radius) < 0 || (newX + quad.point.radius) > width) {
         quad.point.direction = Math.PI - quad.point.direction;
-        quad.point.x += Math.cos(quad.point.direction) * quad.point.velocity;
+        quad.point.x = quad.point.px + Math.cos(quad.point.direction) * quad.point.velocity;
+      } else {
+        quad.point.x = newX;
       }
 
-      if (quad.point.y - quad.point.radius < 0 || quad.point.y + quad.point.radius > height) {
-        
-        quad.point.y = quad.point.py;
+      if (newY - quad.point.radius < 0 || newY + quad.point.radius > height) {
         quad.point.direction = 2 * Math.PI - quad.point.direction;
-        quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
+        quad.point.y = quad.point.py + Math.sin(quad.point.direction) * quad.point.velocity;
+      } else {
+        quad.point.y = newY;
       }
     //check for collision with player
       var xDist = player.x - quad.point.x;
