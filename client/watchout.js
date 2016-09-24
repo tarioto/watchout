@@ -10,7 +10,7 @@ svg.append('rect').attr('width', width)
   .attr('height', height).attr('stroke', 'blue')
   .attr('stroke-width', '5px');
 
-var nodes = d3.range(25).map(function() {
+var nodes = d3.range(11).map(function() {
   return {
     radius: Math.random() * 10 + 5,
     x: Math.floor(Math.random() * width * .75) + .125 * width,
@@ -19,6 +19,14 @@ var nodes = d3.range(25).map(function() {
     direction: Math.random() * 2 * Math.PI
   };
 });
+
+var player = nodes[0];
+player.radius = 25;
+player.x = width / 2;
+player.y = height / 2;
+player.velocity = 0;
+player.direction = 0;
+player.fixed = true;
 
 svg.selectAll('circle')
   .data(nodes)
@@ -42,36 +50,55 @@ force.on('tick', function() {
   // iterate over each node and make it move
   // per its velocity
 
-  q.visit(move);
+  q.visit(collisionDetector(player));
   svg.selectAll('circle')
     .attr('cx', function(d) { return d.x; } )
     .attr('cy', function(d) { return d.y; } );
   force.resume(); // prevent "cooling down" freezing
 });
 
-var move = function(quad, x1, y1, x2, y2) {
-  if (quad.point) {
-    quad.point.x += Math.cos(quad.point.direction) * quad.point.velocity;
-    quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
-    // check for collisons
-    if ((quad.point.x - quad.point.radius) < 0 || (quad.point.x + quad.point.radius) > width) {
-      
-      // undo the last change
-      quad.point.x = quad.point.px;
-      // figure out a new direction
-      quad.point.direction = Math.PI - quad.point.direction;
+var collisionDetector = function(player) {
+  var player = player;
+
+  return function(quad, x1, y1, x2, y2) {
+    if (quad.point && (quad.point !== player)) {
       quad.point.x += Math.cos(quad.point.direction) * quad.point.velocity;
-    }
-
-    if (quad.point.y - quad.point.radius < 0 || quad.point.y + quad.point.radius > height) {
-      //debugger;
-      quad.point.y = quad.point.py;
-      quad.point.direction = 2 * Math.PI - quad.point.direction;
       quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
-    }
-  }
+      // check for collisons
+      if ((quad.point.x - quad.point.radius) < 0 || (quad.point.x + quad.point.radius) > width) {
+        
+        // undo the last change
+        quad.point.x = quad.point.px;
+        // figure out a new direction
+        quad.point.direction = Math.PI - quad.point.direction;
+        quad.point.x += Math.cos(quad.point.direction) * quad.point.velocity;
+      }
 
-  //return true;
+      if (quad.point.y - quad.point.radius < 0 || quad.point.y + quad.point.radius > height) {
+        
+        quad.point.y = quad.point.py;
+        quad.point.direction = 2 * Math.PI - quad.point.direction;
+        quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
+      }
+
+
+    //check for collision with player
+      var xDist = player.x - quad.point.x;
+      var yDist = player.y - quad.point.y;
+      var dist = Math.sqrt(xDist * xDist + yDist * yDist);
+
+      if (dist < player.radius + quad.point.radius) {
+        
+        console.count('collision');
+      }
+    }
+
+    return false;
+  };
+
 };
+
+
+
 
 force.start();
