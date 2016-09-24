@@ -35,7 +35,7 @@ var force = d3.layout.force()
   .size([width, height]);
 
 force.on('tick', function() {
-  var q = d3.geom.quadtree(nodes, width, height);
+  var q = d3.geom.quadtree(nodes);
   var i = 0;
   n = nodes.length;
 
@@ -46,12 +46,29 @@ force.on('tick', function() {
   svg.selectAll('circle')
     .attr('cx', function(d) { return d.x; } )
     .attr('cy', function(d) { return d.y; } );
+  force.resume(); // prevent "cooling down" freezing
 });
 
 var move = function(quad, x1, y1, x2, y2) {
   quad.point.x += Math.cos(quad.point.direction) * quad.point.velocity;
   quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
-  return false;
+  // check for collisons
+  if (quad.point.x < 0 || quad.point.x > width) {
+    // undo the last change
+    quad.point.x = quad.point.px;
+    // figure out a new direction
+    quad.point.direction = Math.PI - quad.point.direction;
+    quad.point.x += Math.cos(quad.point.direction) * quad.point.velocity;
+  }
+
+  if (quad.point.y < 0 || quad.point.y > height) {
+    //debugger;
+    quad.point.y = quad.point.py;
+    quad.point.direction = 2* Math.PI - quad.point.direction;
+    quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
+  }
+
+  //return true;
 };
 
 force.start();
