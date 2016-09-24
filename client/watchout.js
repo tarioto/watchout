@@ -10,12 +10,12 @@ svg.append('rect').attr('width', width)
   .attr('height', height).attr('stroke', 'blue')
   .attr('stroke-width', '5px');
 
-var nodes = d3.range(1).map(function() {
+var nodes = d3.range(25).map(function() {
   return {
     radius: Math.random() * 10 + 5,
-    x: Math.floor(Math.random() * width),
-    y: Math.floor(Math.random() * height),
-    velocity: Math.random() * 2,
+    x: Math.floor(Math.random() * width * .75) + .125 * width,
+    y: Math.floor(Math.random() * height * .75) + .125 * height,
+    velocity: Math.random() + 0.5,
     direction: Math.random() * 2 * Math.PI
   };
 });
@@ -35,7 +35,7 @@ var force = d3.layout.force()
   .size([width, height]);
 
 force.on('tick', function() {
-  var q = d3.geom.quadtree(nodes);
+  var q = d3.geom.quadtree(nodes, width, height);
   var i = 0;
   n = nodes.length;
 
@@ -50,22 +50,25 @@ force.on('tick', function() {
 });
 
 var move = function(quad, x1, y1, x2, y2) {
-  quad.point.x += Math.cos(quad.point.direction) * quad.point.velocity;
-  quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
-  // check for collisons
-  if (quad.point.x < 0 || quad.point.x > width) {
-    // undo the last change
-    quad.point.x = quad.point.px;
-    // figure out a new direction
-    quad.point.direction = Math.PI - quad.point.direction;
+  if (quad.point) {
     quad.point.x += Math.cos(quad.point.direction) * quad.point.velocity;
-  }
-
-  if (quad.point.y < 0 || quad.point.y > height) {
-    //debugger;
-    quad.point.y = quad.point.py;
-    quad.point.direction = 2* Math.PI - quad.point.direction;
     quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
+    // check for collisons
+    if ((quad.point.x - quad.point.radius) < 0 || (quad.point.x + quad.point.radius) > width) {
+      
+      // undo the last change
+      quad.point.x = quad.point.px;
+      // figure out a new direction
+      quad.point.direction = Math.PI - quad.point.direction;
+      quad.point.x += Math.cos(quad.point.direction) * quad.point.velocity;
+    }
+
+    if (quad.point.y - quad.point.radius < 0 || quad.point.y + quad.point.radius > height) {
+      //debugger;
+      quad.point.y = quad.point.py;
+      quad.point.direction = 2 * Math.PI - quad.point.direction;
+      quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
+    }
   }
 
   //return true;
