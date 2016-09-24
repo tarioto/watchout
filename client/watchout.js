@@ -15,7 +15,7 @@ var nodes = d3.range(1).map(function() {
     radius: Math.random() * 10 + 5,
     x: Math.floor(Math.random() * width),
     y: Math.floor(Math.random() * height),
-    velocity: Math.random() * 10,
+    velocity: Math.random() * 2,
     direction: Math.random() * 2 * Math.PI
   };
 });
@@ -27,3 +27,31 @@ svg.selectAll('circle')
   .attr('cx', function(d) { return d.x; })
   .attr('cy', function(d) { return d.y; })
   .style('fill', function(d, i) { return 'hsl(' + Math.random() * 360 + ', 50%, 50%)'; });
+
+var force = d3.layout.force()
+  .gravity(0)
+  .charge(0)
+  .nodes(nodes)
+  .size([width, height]);
+
+force.on('tick', function() {
+  var q = d3.geom.quadtree(nodes, width, height);
+  var i = 0;
+  n = nodes.length;
+
+  // iterate over each node and make it move
+  // per its velocity
+
+  q.visit(move);
+  svg.selectAll('circle')
+    .attr('cx', function(d) { return d.x; } )
+    .attr('cy', function(d) { return d.y; } );
+});
+
+var move = function(quad, x1, y1, x2, y2) {
+  quad.point.x += Math.cos(quad.point.direction) * quad.point.velocity;
+  quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
+  return false;
+};
+
+force.start();
