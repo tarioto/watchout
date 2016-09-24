@@ -28,13 +28,29 @@ player.velocity = 0;
 player.direction = 0;
 player.fixed = true;
 
+var dragmove = function(d) {
+  if (d === player) {
+    d3.select(this)
+      .attr('cx', d.px = Math.max(d.radius, Math.min(width - d.radius, d3.event.x)))
+      .attr('cy', d.py = Math.max(d.radius, Math.min(height - d.radius, d3.event.y)));
+  }
+};
+
+
+var drag = d3.behavior.drag()
+  .origin(function(d) { return d; })
+  .on('drag', dragmove);
+
+
 svg.selectAll('circle')
   .data(nodes)
   .enter().append('circle')
   .attr('r', function(d) { return d.radius; })
   .attr('cx', function(d) { return d.x; })
   .attr('cy', function(d) { return d.y; })
-  .style('fill', function(d, i) { return 'hsl(' + Math.random() * 360 + ', 50%, 50%)'; });
+  .style('fill', function(d, i) { return 'hsl(' + Math.random() * 360 + ', 50%, 50%)'; })
+  .call(drag);
+
 
 var force = d3.layout.force()
   .gravity(0)
@@ -80,8 +96,6 @@ var collisionDetector = function(player) {
         quad.point.direction = 2 * Math.PI - quad.point.direction;
         quad.point.y += Math.sin(quad.point.direction) * quad.point.velocity;
       }
-
-
     //check for collision with player
       var xDist = player.x - quad.point.x;
       var yDist = player.y - quad.point.y;
@@ -97,8 +111,5 @@ var collisionDetector = function(player) {
   };
 
 };
-
-
-
 
 force.start();
