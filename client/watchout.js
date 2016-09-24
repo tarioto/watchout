@@ -2,6 +2,24 @@
 var width = 800;
 var height = 640;
 
+var score = [
+  {
+    name: 'Current score',
+    value: 0
+  },
+  {
+    name: 'High score',
+    value: 0
+  },
+  {
+    name: 'Collisons',
+    value: 0
+  }
+];
+
+var scoreboard = d3.select('.scoreboard').selectAll('div')
+  .data(score).enter().append('div');
+
 var svg = d3.select('body').append('svg')
   .attr('width', width)
   .attr('height', height);
@@ -59,6 +77,16 @@ var force = d3.layout.force()
   .size([width, height]);
 
 force.on('tick', function() {
+  score[0].value++;
+  if (score[0].value > score[1].value) {
+    score[1].value = score[0].value;
+  }
+
+  scoreboard.data(score).text(function(d) {
+    var score = d.name !== 'Collisons' ? Math.floor(d.value / 10) : d.value;
+    return d.name + ' ' + score;
+  });
+
   var q = d3.geom.quadtree(nodes, width, height);
   var i = 0;
   n = nodes.length;
@@ -72,6 +100,9 @@ force.on('tick', function() {
     .attr('cy', function(d) { return d.y; } );
   force.resume(); // prevent "cooling down" freezing
 });
+
+var lastCollisionTime = Date.now();
+
 
 var collisionDetector = function(player) {
   var player = player;
@@ -101,9 +132,12 @@ var collisionDetector = function(player) {
       var yDist = player.y - quad.point.y;
       var dist = Math.sqrt(xDist * xDist + yDist * yDist);
 
-      if (dist < player.radius + quad.point.radius) {
-        
-        console.count('collision');
+      if (dist < player.radius + quad.point.radius && Date.now() - 500 > lastCollisionTime) {
+        lastCollisionTime = Date.now();
+        score[2].value++;
+        // need some way to not keep adding as collision
+        // is happening
+        score[0].value = 0;
       }
     }
 
