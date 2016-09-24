@@ -2,6 +2,8 @@
 var width = 800;
 var height = 640;
 
+var tickCounter = 0;
+
 var score = [
   {
     name: 'Current score',
@@ -28,12 +30,12 @@ svg.append('rect').attr('width', width)
   .attr('height', height).attr('stroke', 'blue')
   .attr('stroke-width', '5px');
 
-var nodes = d3.range(20).map(function() {
+var nodes = d3.range(11).map(function() {
   return {
     radius: Math.random() * 10 + 8,
     x: Math.floor(Math.random() * width * .75) + .125 * width,
     y: Math.floor(Math.random() * height * .75) + .125 * height,
-    velocity: Math.random() + 0.5,
+    velocity: Math.random() / 2 + 0.25,
     direction: Math.random() * 2 * Math.PI
   };
 });
@@ -72,11 +74,11 @@ svg.selectAll('circle')
 
 var force = d3.layout.force()
   .gravity(0)
-  .charge(0)
+  .charge(function(d, i) { return i ? 100 : 0; })
   .nodes(nodes)
   .size([width, height]);
 
-force.on('tick', function() {
+force.on('tick', function(e) {
   score[0].value++;
   if (score[0].value > score[1].value) {
     score[1].value = score[0].value;
@@ -90,6 +92,19 @@ force.on('tick', function() {
   var q = d3.geom.quadtree(nodes, width, height);
   var i = 0;
   n = nodes.length;
+
+  // every certain amount of time (i.e. 'tick')
+  // make the velocity go up
+  tickCounter++;
+  if (tickCounter % 300 === 0) {
+    console.log('Level up!');
+    q.visit(function(node) {
+      if (node.point) {
+        node.point.velocity *= 1.1;
+      }
+    });
+  }
+
 
   // iterate over each node and make it move
   // per its velocity
