@@ -16,6 +16,10 @@ var score = [
   {
     name: 'Collisons',
     value: 0
+  },
+  {
+    name: 'Level',
+    value: 1
   }
 ];
 
@@ -85,7 +89,7 @@ force.on('tick', function(e) {
   }
 
   scoreboard.data(score).text(function(d) {
-    var score = d.name !== 'Collisons' ? Math.floor(d.value / 10) : d.value;
+    var score = ((d.name === 'High score') || (d.name === 'Current score')) ? Math.floor(d.value / 10) : d.value;
     return d.name + ' ' + score;
   });
 
@@ -97,6 +101,7 @@ force.on('tick', function(e) {
   // make the velocity go up
   tickCounter++;
   if (tickCounter % 300 === 0) {
+    score[3].value++;
     console.log('Level up!');
     q.visit(function(node) {
       if (node.point) {
@@ -105,6 +110,9 @@ force.on('tick', function(e) {
     });
   }
 
+  if (tickCounter % 2 === 0) {
+    svg.select('circle').style('fill', function(d, i) { return 'hsl(' + tickCounter % 360 + ', 90%, ' + Math.random() * 75 + 25 + '%)'; })
+  }
 
   // iterate over each node and make it move
   // per its velocity
